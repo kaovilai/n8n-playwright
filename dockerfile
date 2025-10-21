@@ -1,63 +1,88 @@
 # Use the official n8n image as base
 FROM docker.io/n8nio/n8n:latest
 
-# Install WebKit dependencies
+# Install browser dependencies for Playwright
 USER root
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libwoff1 \
-    libopus0 \
-    libwebp6 \
-    libwebpdemux2 \
-    libenchant1c2a \
-    libgudev-1.0-0 \
-    libsecret-1-0 \
-    libhyphen0 \
-    libgdk-pixbuf2.0-0 \
-    libegl1 \
-    libnotify4 \
-    libxslt1.1 \
-    libevent-2.1-7 \
-    libgles2 \
-    libvpx6 \
-    libxcomposite1 \
+
+# Install dependencies with fallback for platform-specific packages
+RUN apt-get update && \
+    # Core dependencies that should be available on all platforms
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    fonts-liberation \
+    fonts-noto-color-emoji \
+    ttf-ubuntu-font-family \
+    libasound2 \
     libatk-bridge2.0-0 \
     libatk1.0-0 \
     libatspi2.0-0 \
     libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libdbus-glib-1-2 \
+    libdrm2 \
+    libegl1 \
     libepoxy0 \
     libfontconfig1 \
     libfreetype6 \
     libgbm1 \
+    libgdk-pixbuf2.0-0 \
+    libgles2 \
     libglib2.0-0 \
+    libgtk-3-0 \
+    libgudev-1.0-0 \
     libharfbuzz0b \
-    libicu66 \
-    libjpeg8 \
+    libhyphen0 \
+    libnotify4 \
+    libnspr4 \
+    libnss3 \
+    libopus0 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
     libpangoft2-1.0-0 \
+    libpci3 \
     libpixman-1-0 \
-    libpng16-16 \
+    libsecret-1-0 \
     libwayland-client0 \
-    libwayland-egl1 \
     libwayland-server0 \
     libx11-6 \
-    libdbus-glib-1-2 \
-		libxt6 \
+    libx11-xcb1 \
     libxcb1 \
+    libxcb-dri3-0 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
     libxext6 \
     libxfixes3 \
-    libpci3 \
-		libasound2 \
     libxi6 \
     libxkbcommon0 \
     libxrandr2 \
     libxrender1 \
     libxshmfence1 \
-    libgtk-3-0 \
-    fonts-liberation \
-    fonts-noto-color-emoji \
-    ttf-ubuntu-font-family \
-    && rm -rf /var/lib/apt/lists/*
+    libxslt1.1 \
+    libxt6 \
+    xvfb && \
+    # Try to install version-specific packages, ignore if not available on current platform
+    (apt-get install -y --no-install-recommends libicu66 || \
+     apt-get install -y --no-install-recommends libicu67 || \
+     apt-get install -y --no-install-recommends libicu72 || true) && \
+    (apt-get install -y --no-install-recommends libjpeg8 || \
+     apt-get install -y --no-install-recommends libjpeg-turbo8 || \
+     apt-get install -y --no-install-recommends libjpeg62-turbo || true) && \
+    (apt-get install -y --no-install-recommends libwebp6 || \
+     apt-get install -y --no-install-recommends libwebp7 || true) && \
+    (apt-get install -y --no-install-recommends libwebpdemux2 || true) && \
+    (apt-get install -y --no-install-recommends libenchant1c2a || \
+     apt-get install -y --no-install-recommends libenchant-2-2 || true) && \
+    (apt-get install -y --no-install-recommends libevent-2.1-7 || \
+     apt-get install -y --no-install-recommends libevent-2.1-6 || true) && \
+    (apt-get install -y --no-install-recommends libvpx6 || \
+     apt-get install -y --no-install-recommends libvpx7 || true) && \
+    (apt-get install -y --no-install-recommends libpng16-16 || true) && \
+    (apt-get install -y --no-install-recommends libwayland-egl1 || true) && \
+    (apt-get install -y --no-install-recommends libwoff1 || true) && \
+    # Cleanup
+    rm -rf /var/lib/apt/lists/*
 
 # Switch back to node user
 USER node
