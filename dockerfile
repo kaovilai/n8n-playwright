@@ -1,63 +1,62 @@
 # Use the official n8n image as base
-FROM docker.n8n.io/n8nio/n8n:1.79.3
+FROM docker.n8n.io/n8nio/n8n:latest
 
-# Install WebKit dependencies
+# Install WebKit and Chromium dependencies for Playwright
 USER root
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libwoff1 \
-    libopus0 \
-    libwebp6 \
-    libwebpdemux2 \
-    libenchant1c2a \
-    libgudev-1.0-0 \
-    libsecret-1-0 \
-    libhyphen0 \
-    libgdk-pixbuf2.0-0 \
-    libegl1 \
-    libnotify4 \
-    libxslt1.1 \
-    libevent-2.1-7 \
-    libgles2 \
-    libvpx6 \
-    libxcomposite1 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libatspi2.0-0 \
-    libcairo2 \
-    libepoxy0 \
-    libfontconfig1 \
-    libfreetype6 \
-    libgbm1 \
-    libglib2.0-0 \
-    libharfbuzz0b \
-    libicu66 \
-    libjpeg8 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libpangoft2-1.0-0 \
-    libpixman-1-0 \
-    libpng16-16 \
-    libwayland-client0 \
-    libwayland-egl1 \
-    libwayland-server0 \
-    libx11-6 \
-    libdbus-glib-1-2 \
-		libxt6 \
-    libxcb1 \
-    libxext6 \
-    libxfixes3 \
-    libpci3 \
-		libasound2 \
-    libxi6 \
-    libxkbcommon0 \
-    libxrandr2 \
-    libxrender1 \
-    libxshmfence1 \
-    libgtk-3-0 \
-    fonts-liberation \
-    fonts-noto-color-emoji \
-    ttf-ubuntu-font-family \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+    opus \
+    libwebp \
+    enchant2 \
+    eudev-libs \
+    libsecret \
+    hyphen \
+    gdk-pixbuf \
+    mesa-egl \
+    libnotify \
+    libxslt \
+    libevent \
+    mesa-gles \
+    libvpx \
+    libxcomposite \
+    at-spi2-core \
+    cairo \
+    libepoxy \
+    fontconfig \
+    freetype \
+    mesa-gbm \
+    glib \
+    harfbuzz \
+    icu-libs \
+    libjpeg-turbo \
+    pango \
+    pixman \
+    libpng \
+    wayland-libs-client \
+    wayland-libs-egl \
+    wayland-libs-server \
+    libx11 \
+    dbus-glib \
+    libxt \
+    libxcb \
+    libxext \
+    libxfixes \
+    pciutils-libs \
+    alsa-lib \
+    libxi \
+    libxkbcommon \
+    libxrandr \
+    libxrender \
+    libxshmfence \
+    gtk+3.0 \
+    font-liberation \
+    font-noto-emoji \
+    ttf-dejavu \
+    chromium \
+    firefox \
+    nss \
+    xvfb \
+    dbus \
+    udev
 
 # Switch back to node user
 USER node
