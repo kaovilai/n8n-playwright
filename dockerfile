@@ -72,21 +72,6 @@ RUN apk add --no-cache \
     # Process management
     tini
 
-# Pre-create browsers directory structure to prevent n8n-nodes-playwright from downloading
-# The postinstall script checks for this directory and skips download if it exists
-RUN mkdir -p /home/node/.cache/ms-playwright && \
-    # Create dummy browser directories to satisfy the setup script
-    mkdir -p /home/node/.cache/ms-playwright/chromium-1140 && \
-    mkdir -p /home/node/.cache/ms-playwright/firefox-1491 && \
-    mkdir -p /home/node/.cache/ms-playwright/webkit-2104 && \
-    # Also pre-create the n8n nodes directory where the package expects browsers
-    mkdir -p /home/node/.n8n/nodes/node_modules/n8n-nodes-playwright/dist/nodes/browsers && \
-    # Create symlinks to system browsers in the expected locations
-    ln -s /usr/bin/chromium-browser /home/node/.cache/ms-playwright/chromium-1140/chrome-linux && \
-    ln -s /usr/bin/firefox /home/node/.cache/ms-playwright/firefox-1491/firefox && \
-    # Set proper ownership
-    chown -R node:node /home/node/.cache /home/node/.n8n
-
 # Switch back to node user
 USER node
 
@@ -95,6 +80,10 @@ WORKDIR /home/node/.n8n
 
 # Create a volume for persistent data
 VOLUME /home/node/.n8n
+
+# Copy the browser configuration script
+COPY --chown=node:node configure-browsers.sh /usr/local/bin/configure-browsers.sh
+RUN chmod +x /usr/local/bin/configure-browsers.sh
 
 # Expose port 5678
 EXPOSE 5678
@@ -107,6 +96,9 @@ ENV PLAYWRIGHT_FIREFOX_EXECUTABLE_PATH=/usr/bin/firefox
 
 # Chrome/Chromium flags for better headless performance
 ENV CHROMIUM_FLAGS="--disable-software-rasterizer --disable-dev-shm-usage --disable-gpu --no-sandbox"
+
+# Override the entrypoint to run our configuration script
+ENTRYPOINT ["/usr/local/bin/configure-browsers.sh"]
 
 # Fix: Use just "start" instead of "n8n start" to prevent command duplication
 CMD ["start"]

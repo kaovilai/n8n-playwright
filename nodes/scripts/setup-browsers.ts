@@ -11,7 +11,39 @@ async function setupBrowsers() {
 			console.log('Operating System:', platform());
 			console.log('Node version:', process.version);
 
-			// 2. Determine paths
+			// Check for system browsers (Alpine Linux compatibility)
+			const systemChromium = '/usr/bin/chromium-browser';
+			const systemFirefox = '/usr/bin/firefox';
+
+			if (existsSync(systemChromium) && existsSync(systemFirefox)) {
+					console.log('\nSystem browsers detected! Using Alpine-compatible browsers.');
+
+					const browsersPath = join(__dirname, '..', 'browsers');
+
+					// Clean and create browsers directory
+					if (existsSync(browsersPath)) {
+							rmSync(browsersPath, { recursive: true, force: true });
+					}
+					mkdirSync(browsersPath, { recursive: true });
+
+					// Create symlinks to system browsers
+					// Chromium - version 1194 is expected
+					const chromiumDir = join(browsersPath, 'chromium-1194');
+					mkdirSync(join(chromiumDir, 'chrome-linux'), { recursive: true });
+					execSync(`ln -sf ${systemChromium} ${join(chromiumDir, 'chrome-linux', 'chrome')}`);
+					console.log('Linked system Chromium to:', join(chromiumDir, 'chrome-linux', 'chrome'));
+
+					// Firefox - version 1491 is expected
+					const firefoxDir = join(browsersPath, 'firefox-1491');
+					mkdirSync(join(firefoxDir, 'firefox'), { recursive: true });
+					execSync(`ln -sf ${systemFirefox} ${join(firefoxDir, 'firefox', 'firefox')}`);
+					console.log('Linked system Firefox to:', join(firefoxDir, 'firefox', 'firefox'));
+
+					console.log('\nSystem browser setup completed successfully!');
+					return; // Exit early - no need to download browsers
+			}
+
+			// 2. Determine paths for non-Alpine systems
 			const os = platform();
 			const sourcePath = os === 'win32'
 					? join(process.env.USERPROFILE || '', 'AppData', 'Local', 'ms-playwright')
