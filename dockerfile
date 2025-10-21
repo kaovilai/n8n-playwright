@@ -1,9 +1,29 @@
 # Use the official n8n image as base
 FROM docker.n8n.io/n8nio/n8n:latest
 
-# Install WebKit and Chromium dependencies for Playwright
+# Browser compatibility approach inspired by https://github.com/jlandure/alpine-chrome
+# Uses system-installed browsers with Playwright instead of downloading incompatible binaries
+
+# Install browser dependencies for Playwright with Alpine compatibility
 USER root
+
+# Install Chromium with SwiftShader for graphics compatibility
+# and Firefox with all necessary dependencies
 RUN apk add --no-cache \
+    chromium \
+    chromium-swiftshader \
+    firefox \
+    firefox-esr \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    font-noto-emoji \
+    font-liberation \
+    ttf-dejavu \
+    # Additional dependencies for browser automation
     opus \
     libwebp \
     enchant2 \
@@ -22,10 +42,8 @@ RUN apk add --no-cache \
     cairo \
     libepoxy \
     fontconfig \
-    freetype \
     mesa-gbm \
     glib \
-    harfbuzz \
     icu-libs \
     libjpeg-turbo \
     pango \
@@ -48,15 +66,11 @@ RUN apk add --no-cache \
     libxrender \
     libxshmfence \
     gtk+3.0 \
-    font-liberation \
-    font-noto-emoji \
-    ttf-dejavu \
-    chromium \
-    firefox \
-    nss \
     xvfb \
     dbus \
-    udev
+    udev \
+    # Process management
+    tini
 
 # Switch back to node user
 USER node
@@ -70,8 +84,14 @@ VOLUME /home/node/.n8n
 # Expose port 5678
 EXPOSE 5678
 
-# Set environment variables
+# Set environment variables for Playwright to use system browsers
 ENV NODE_ENV=production
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PLAYWRIGHT_FIREFOX_EXECUTABLE_PATH=/usr/bin/firefox
 
-# Use the default n8n command to start the application
-CMD ["n8n", "start"]
+# Chrome/Chromium flags for better headless performance
+ENV CHROMIUM_FLAGS="--disable-software-rasterizer --disable-dev-shm-usage --disable-gpu --no-sandbox"
+
+# Fix: Use just "start" instead of "n8n start" to prevent command duplication
+CMD ["start"]
