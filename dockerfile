@@ -72,6 +72,10 @@ RUN apk add --no-cache \
     # Process management
     tini
 
+# Copy the browser configuration script before switching user
+COPY --chown=node:node configure-browsers.sh /usr/local/bin/configure-browsers.sh
+RUN chmod +x /usr/local/bin/configure-browsers.sh
+
 # Switch back to node user
 USER node
 
@@ -80,10 +84,6 @@ WORKDIR /home/node/.n8n
 
 # Create a volume for persistent data
 VOLUME /home/node/.n8n
-
-# Copy the browser configuration script
-COPY --chown=node:node configure-browsers.sh /usr/local/bin/configure-browsers.sh
-RUN chmod +x /usr/local/bin/configure-browsers.sh
 
 # Expose port 5678
 EXPOSE 5678

@@ -2,7 +2,9 @@
 
 ## Key Learnings from Production Deployment
 
-### Critical Fix: Command Override
+### Critical Fixes
+
+#### 1. Command Override
 The most important discovery during deployment was that the container fails to start with the error `Command "n8n" not found` if the CMD in the Dockerfile is `["n8n", "start"]`.
 
 **Solution:** Override the command in docker-compose.yml to just `["start"]`:
@@ -11,6 +13,14 @@ command: ["start"]
 ```
 
 This prevents the docker-entrypoint.sh script from trying to execute `n8n "n8n start"` which causes the failure.
+
+#### 2. Browser Compatibility on Alpine Linux
+n8n-nodes-playwright downloads browsers compiled with glibc which are incompatible with Alpine's musl libc, causing "posix_fallocate64: symbol not found" errors.
+
+**Solution:**
+- Install system browsers (chromium, firefox) from Alpine packages
+- Use a background script to replace downloaded browsers with symlinks to system browsers
+- Custom entrypoint script that runs browser configuration in background after container starts
 
 ### Memory Requirements
 - **Development**: 600-800MB recommended
