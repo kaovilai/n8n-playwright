@@ -1,5 +1,5 @@
 # Use the official n8n image as base
-FROM docker.n8n.io/n8nio/n8n:1.79.3
+FROM docker.io/n8nio/n8n:latest
 
 # Install WebKit dependencies
 USER root
