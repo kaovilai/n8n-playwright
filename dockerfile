@@ -72,6 +72,21 @@ RUN apk add --no-cache \
     # Process management
     tini
 
+# Pre-create browsers directory structure to prevent n8n-nodes-playwright from downloading
+# The postinstall script checks for this directory and skips download if it exists
+RUN mkdir -p /home/node/.cache/ms-playwright && \
+    # Create dummy browser directories to satisfy the setup script
+    mkdir -p /home/node/.cache/ms-playwright/chromium-1140 && \
+    mkdir -p /home/node/.cache/ms-playwright/firefox-1491 && \
+    mkdir -p /home/node/.cache/ms-playwright/webkit-2104 && \
+    # Also pre-create the n8n nodes directory where the package expects browsers
+    mkdir -p /home/node/.n8n/nodes/node_modules/n8n-nodes-playwright/dist/nodes/browsers && \
+    # Create symlinks to system browsers in the expected locations
+    ln -s /usr/bin/chromium-browser /home/node/.cache/ms-playwright/chromium-1140/chrome-linux && \
+    ln -s /usr/bin/firefox /home/node/.cache/ms-playwright/firefox-1491/firefox && \
+    # Set proper ownership
+    chown -R node:node /home/node/.cache /home/node/.n8n
+
 # Switch back to node user
 USER node
 
