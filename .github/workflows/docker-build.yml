@@ -14,12 +14,12 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  # NOTE: docker.io/n8nio/n8n:latest is NOT a substitute for this -- confirmed
-  # it's a different (non-Alpine) image entirely, `apk` isn't even present.
-  # docker.n8n.io is the correct source; its rate-limiting is a real but
-  # separate problem (see the digest-caching steps below, which reduce -- but
-  # don't eliminate -- how often we hit it).
-  BASE_IMAGE: docker.n8n.io/n8nio/n8n:latest
+  # Keep in sync with the dockerfile's N8N_VERSION ARG default. Pinned per
+  # n8n's own official guidance (n8n-io/n8n-hosting README: "Pin a specific
+  # image tag for production rather than relying on `stable`/`latest`") --
+  # NOTE: docker.io/n8nio/n8n is NOT a substitute for docker.n8n.io/n8nio/n8n,
+  # confirmed to be a different (non-Alpine) image entirely.
+  BASE_IMAGE: docker.n8n.io/n8nio/n8n:2.0.3
 
 jobs:
   build-and-push:
@@ -48,27 +48,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Compute hourly cache key
-        id: hour
-        run: echo "hour=$(date -u +%Y%m%d%H)" >> "$GITHUB_OUTPUT"
-
-      # Resolving the digest once and caching it for up to an hour means repeated
-      # builds in that window (multiple PR pushes, re-runs, the weekly schedule +
-      # a manual dispatch, etc.) don't re-hit the registry's manifest-resolution
-      # endpoint at all until the cache key rolls over to the next hour. The
-      # image name is part of the key so switching BASE_IMAGE (e.g. registries)
-      # busts stale cached digests instead of reusing them. Note this only
-      # avoids the *resolution* HEAD request when the cache hits -- BuildKit
-      # still issues its own manifest HEAD request for the actual pull/build
-      # step regardless of whether the reference is a tag or a pinned digest,
-      # so this reduces registry load but does not fully insulate builds from
-      # docker.n8n.io rate-limiting.
-      - name: Cache resolved base image digest (up to 1h)
+      # BASE_IMAGE is pinned to a specific release, not `:latest` -- its digest
+      # never changes until this file's BASE_IMAGE (and the dockerfile's
+      # N8N_VERSION) are deliberately bumped together. So the cache key has no
+      # time component: this resolves once, ever, per pinned version, instead
+      # of re-hitting docker.n8n.io's rate-limited manifest endpoint on every
+      # build. Bumping BASE_IMAGE naturally busts it (new key = cache miss).
+      - name: Cache resolved base image digest (for this pinned version)
         id: cache-digest
         uses: actions/cache@v4
         with:
           path: /tmp/base-image-ref.txt
-          key: n8n-base-image-digest-${{ steps.hour.outputs.hour }}-${{ env.BASE_IMAGE }}
+          key: n8n-base-image-digest-${{ env.BASE_IMAGE }}
 
       - name: Resolve base image digest
         if: steps.cache-digest.outputs.cache-hit != 'true'
