@@ -1,9 +1,18 @@
-# Use the official n8n image as base. Pinned via a build-arg (resolved + cached
-# for up to 1h in CI, see docker-build.yml) rather than a bare `FROM ...:latest`
-# -- docker.n8n.io rate-limits the manifest-resolution HEAD request that a
-# floating tag needs on every build, which was breaking CI when several builds
-# ran in quick succession.
-ARG BASE_IMAGE=docker.n8n.io/n8nio/n8n:latest
+# Use the official n8n image as base, pinned to a specific release -- matches
+# n8n's own official guidance (github.com/n8n-io/n8n-hosting README: "Pin a
+# specific image tag for production rather than relying on `stable`/`latest`").
+# This also happens to be what caused this whole file's other fixes to be
+# needed in the first place: an unpinned `:latest` silently bumped n8n's
+# version, which re-triggered n8n-nodes-playwright's install/download path at
+# boot. Pinning means that only happens when WE deliberately bump this ARG
+# (Dependabot's docker ecosystem update will open a PR when a new release is
+# out, giving a chance to test before merging, instead of it happening
+# silently on every container recreate).
+#
+# 2.0.3 matches what was actually running when this pin was introduced -- bump
+# deliberately.
+ARG N8N_VERSION=2.0.3
+ARG BASE_IMAGE=docker.n8n.io/n8nio/n8n:${N8N_VERSION}
 FROM ${BASE_IMAGE}
 
 # Browser compatibility approach inspired by https://github.com/jlandure/alpine-chrome
