@@ -11,8 +11,15 @@
 #
 # 2.0.3 matches what was actually running when this pin was introduced -- bump
 # deliberately.
+#
+# Uses Docker Hub (docker.io) rather than n8n's own docker.n8n.io -- confirmed
+# identical digest for this pinned tag on both registries (they're mirrors of
+# the same image), and docker.n8n.io was persistently rate-limiting CI builds
+# (429 Too Many Requests) while Docker Hub wasn't. Docker Hub's `:latest` tag
+# is NOT equivalent (confirmed to be a different, non-Alpine image) -- this
+# only holds for the pinned version tag, which is exactly what we use.
 ARG N8N_VERSION=2.0.3
-ARG BASE_IMAGE=docker.n8n.io/n8nio/n8n:${N8N_VERSION}
+ARG BASE_IMAGE=docker.io/n8nio/n8n:${N8N_VERSION}
 FROM ${BASE_IMAGE}
 
 # Browser compatibility approach inspired by https://github.com/jlandure/alpine-chrome
