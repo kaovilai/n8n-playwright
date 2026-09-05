@@ -1,5 +1,10 @@
-# Use the official n8n image as base
-FROM docker.n8n.io/n8nio/n8n:latest
+# Use the official n8n image as base. Pinned via a build-arg (resolved + cached
+# for up to 1h in CI, see docker-build.yml) rather than a bare `FROM ...:latest`
+# -- docker.n8n.io rate-limits the manifest-resolution HEAD request that a
+# floating tag needs on every build, which was breaking CI when several builds
+# ran in quick succession.
+ARG BASE_IMAGE=docker.n8n.io/n8nio/n8n:latest
+FROM ${BASE_IMAGE}
 
 # Browser compatibility approach inspired by https://github.com/jlandure/alpine-chrome
 # Uses system-installed browsers with Playwright instead of downloading incompatible binaries
