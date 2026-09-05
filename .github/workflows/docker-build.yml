@@ -54,7 +54,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,prefix={{branch}}-,suffix=-{{date 'YYYYMMDDHHmmss'}}
+            type=sha,prefix={{branch}}-,suffix=-{{date 'YYYYMMDDHHmmss'}},enable=${{ github.event_name != 'pull_request' }}
             type=schedule,pattern=weekly-{{date 'YYYYMMDD'}}
 
       - name: Build and push Docker image
