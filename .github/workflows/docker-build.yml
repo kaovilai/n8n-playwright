@@ -23,7 +23,7 @@ env:
   # persistently rate-limiting CI builds (429) while Docker Hub wasn't. NOTE:
   # this equivalence only holds for the pinned version tag -- Docker Hub's
   # `:latest` is a different, non-Alpine image, confirmed separately.
-  BASE_IMAGE: docker.io/n8nio/n8n:2.0.3
+  BASE_IMAGE: docker.io/n8nio/n8n:2.37.10
 
 jobs:
   resolve-base:
