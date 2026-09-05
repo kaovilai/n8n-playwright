@@ -117,27 +117,39 @@ FROM ${BASE_IMAGE}
 USER root
 
 COPY --from=chromium /chromium-root/ /
+COPY setup-browsers-noop.js /tmp/setup-browsers-noop.js
 
 # ---- Pre-install n8n-nodes-playwright + configure browsers at BUILD time ----
 # Installing via npm directly into an image-baked path (not n8n's own community-
-# node auto-installer, which writes into the persistent /home/node/.n8n volume
-# and re-runs the package's postinstall on every boot) means:
-#   - the ~300-400MB Playwright browser download (if it happens at all - the
-#     package's own postinstall script is skipped entirely below via
-#     --ignore-scripts) happens once, at `docker build`, not on every container
-#     boot/recreate
+# node auto-installer, which writes into the persistent /home/node/.n8n volume)
+# means:
+#   - n8n loads it via N8N_CUSTOM_EXTENSIONS instead of the community-node
+#     mechanism, so it never re-installs/re-downloads at boot as a result of
+#     n8n's own community-node lifecycle
 #   - we deterministically replace whatever browser directory structure the
 #     package ships with a symlink to Alpine's own system Chromium, in the
-#     SAME immutable image layer -- no runtime process can ever write a
-#     competing browser directory alongside it, so there's no race
-#   - n8n loads it via N8N_CUSTOM_EXTENSIONS instead of the community-node
-#     mechanism, so it never re-installs/re-downloads at boot
+#     SAME immutable image layer
 #
-# --ignore-scripts skips BOTH the package's `preinstall` (`npx only-allow
-# pnpm`, which would otherwise abort a plain `npm install`) and its `postinstall`
-# (`setup-browsers.js`, which is what actually triggers the browser download
-# on every plain `npm install`) - we don't need either since the published
-# npm tarball already ships prebuilt `dist` files.
+# --ignore-scripts skips the package's `preinstall` (`npx only-allow pnpm`,
+# which would otherwise abort a plain `npm install`) - we don't need it since
+# the published npm tarball already ships prebuilt `dist` files.
+#
+# CRITICAL: --ignore-scripts does NOT stop n8n itself from invoking this
+# package's browser-setup script -- confirmed live: n8n 2.0.3 runs
+# dist/nodes/scripts/setup-browsers.js at EVERY startup regardless of how the
+# package was installed (community-node or N8N_CUSTOM_EXTENSIONS), and that
+# script unconditionally deletes the entire browsers directory and re-runs
+# `npx playwright install` (chromium+firefox+webkit, ~400MB, incompatible
+# glibc builds on this musl image) every single time -- completely undoing
+# the symlink below on every container restart. Exactly how n8n invokes it
+# wasn't determined (it isn't going through npm's own lifecycle, since
+# --ignore-scripts had no effect on it), but the script self-invokes
+# unconditionally at module load (`setupBrowsers().catch(...)` at file scope,
+# not guarded by `require.main === module`), so replacing the file entirely
+# with setup-browsers-noop.js is a robust fix regardless of the exact call
+# path. Also strips package.json's own `postinstall` field as defense in
+# depth, in case whatever invokes this reads that field directly rather than
+# executing the file by path.
 #
 # Pinned to 0.2.16 to match what was already deployed when this fix was made -
 # bump deliberately, not as a side effect of rebuilding this image.
@@ -152,10 +164,13 @@ RUN mkdir -p /opt/n8n-custom-nodes && \
     cd /opt/n8n-custom-nodes && \
     npm init -y >/dev/null 2>&1 && \
     npm install --ignore-scripts --omit=dev n8n-nodes-playwright@0.2.16 && \
-    BROWSERS_DIR=/opt/n8n-custom-nodes/node_modules/n8n-nodes-playwright/dist/nodes/browsers && \
+    PKG_DIR=/opt/n8n-custom-nodes/node_modules/n8n-nodes-playwright && \
+    BROWSERS_DIR="$PKG_DIR/dist/nodes/browsers" && \
     rm -rf "$BROWSERS_DIR"/chromium-* "$BROWSERS_DIR"/chromium_headless_shell-* "$BROWSERS_DIR"/firefox-* "$BROWSERS_DIR"/webkit-* 2>/dev/null || true && \
     mkdir -p "$BROWSERS_DIR/chromium-alpine-system/chrome-linux" && \
     ln -s /usr/bin/chromium-browser "$BROWSERS_DIR/chromium-alpine-system/chrome-linux/chrome" && \
+    cp /tmp/setup-browsers-noop.js "$PKG_DIR/dist/nodes/scripts/setup-browsers.js" && \
+    node -e "const fs=require('fs'); const p='$PKG_DIR/package.json'; const j=JSON.parse(fs.readFileSync(p)); delete j.scripts.postinstall; fs.writeFileSync(p, JSON.stringify(j,null,2));" && \
     chown -R node:node /opt/n8n-custom-nodes
 
 # Switch back to node user
