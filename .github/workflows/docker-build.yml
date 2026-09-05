@@ -16,10 +16,14 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   # Keep in sync with the dockerfile's N8N_VERSION ARG default. Pinned per
   # n8n's own official guidance (n8n-io/n8n-hosting README: "Pin a specific
-  # image tag for production rather than relying on `stable`/`latest`") --
-  # NOTE: docker.io/n8nio/n8n is NOT a substitute for docker.n8n.io/n8nio/n8n,
-  # confirmed to be a different (non-Alpine) image entirely.
-  BASE_IMAGE: docker.n8n.io/n8nio/n8n:2.0.3
+  # image tag for production rather than relying on `stable`/`latest`").
+  #
+  # docker.io (not docker.n8n.io): confirmed identical digest for this pinned
+  # tag on both registries (same image, mirrored) -- docker.n8n.io was
+  # persistently rate-limiting CI builds (429) while Docker Hub wasn't. NOTE:
+  # this equivalence only holds for the pinned version tag -- Docker Hub's
+  # `:latest` is a different, non-Alpine image, confirmed separately.
+  BASE_IMAGE: docker.io/n8nio/n8n:2.0.3
 
 jobs:
   build-and-push:
@@ -52,8 +56,8 @@ jobs:
       # never changes until this file's BASE_IMAGE (and the dockerfile's
       # N8N_VERSION) are deliberately bumped together. So the cache key has no
       # time component: this resolves once, ever, per pinned version, instead
-      # of re-hitting docker.n8n.io's rate-limited manifest endpoint on every
-      # build. Bumping BASE_IMAGE naturally busts it (new key = cache miss).
+      # of re-hitting the registry's manifest endpoint on every build. Bumping
+      # BASE_IMAGE naturally busts it (new key = cache miss).
       - name: Cache resolved base image digest (for this pinned version)
         id: cache-digest
         uses: actions/cache@v4
