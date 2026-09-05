@@ -117,6 +117,7 @@ FROM ${BASE_IMAGE}
 USER root
 
 COPY --from=chromium /chromium-root/ /
+COPY setup-browsers-noop.js /tmp/setup-browsers-noop.js
 
 # ---- Pre-install n8n-nodes-playwright + configure browsers at BUILD time ----
 # Installing via npm directly into an image-baked path (not n8n's own community-
@@ -144,11 +145,11 @@ COPY --from=chromium /chromium-root/ /
 # wasn't determined (it isn't going through npm's own lifecycle, since
 # --ignore-scripts had no effect on it), but the script self-invokes
 # unconditionally at module load (`setupBrowsers().catch(...)` at file scope,
-# not guarded by `require.main === module`), so overwriting its *content*
-# with a no-op is a robust fix regardless of the exact call path. Also strips
-# package.json's own `postinstall` field as defense in depth, in case
-# whatever invokes this reads that field directly rather than executing the
-# file by path.
+# not guarded by `require.main === module`), so replacing the file entirely
+# with setup-browsers-noop.js is a robust fix regardless of the exact call
+# path. Also strips package.json's own `postinstall` field as defense in
+# depth, in case whatever invokes this reads that field directly rather than
+# executing the file by path.
 #
 # Pinned to 0.2.16 to match what was already deployed when this fix was made -
 # bump deliberately, not as a side effect of rebuilding this image.
@@ -168,7 +169,7 @@ RUN mkdir -p /opt/n8n-custom-nodes && \
     rm -rf "$BROWSERS_DIR"/chromium-* "$BROWSERS_DIR"/chromium_headless_shell-* "$BROWSERS_DIR"/firefox-* "$BROWSERS_DIR"/webkit-* 2>/dev/null || true && \
     mkdir -p "$BROWSERS_DIR/chromium-alpine-system/chrome-linux" && \
     ln -s /usr/bin/chromium-browser "$BROWSERS_DIR/chromium-alpine-system/chrome-linux/chrome" && \
-    printf '"use strict";\nObject.defineProperty(exports, "__esModule", { value: true });\n// Neutered at image build time -- see the RUN block above this file'"'"'s\n// installation for why. Browsers are baked in via the chromium-alpine-system\n// symlink; this used to unconditionally wipe that symlink and re-download\n// all three browsers (chromium/firefox/webkit) on every container start.\nexports.installBrowser = async function installBrowser() {};\n' > "$PKG_DIR/dist/nodes/scripts/setup-browsers.js" && \
+    cp /tmp/setup-browsers-noop.js "$PKG_DIR/dist/nodes/scripts/setup-browsers.js" && \
     node -e "const fs=require('fs'); const p='$PKG_DIR/package.json'; const j=JSON.parse(fs.readFileSync(p)); delete j.scripts.postinstall; fs.writeFileSync(p, JSON.stringify(j,null,2));" && \
     chown -R node:node /opt/n8n-custom-nodes
 
