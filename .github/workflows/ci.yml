@@ -25,7 +25,11 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        # --ignore-scripts: this package's own `postinstall` (setup-browsers.js)
+        # lives under dist/, which doesn't exist until the Build step below runs --
+        # running it now would fail with MODULE_NOT_FOUND. We don't need browser
+        # setup for linting/building the TS source anyway.
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Lint
         run: pnpm run lint
