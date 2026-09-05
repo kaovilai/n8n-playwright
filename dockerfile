@@ -1,1 +1,144 @@
-IyBVc2UgdGhlIG9mZmljaWFsIG44biBpbWFnZSBhcyBiYXNlCkZST00gZG9ja2VyLm44bi5pby9uOG5pby9uOG46bGF0ZXN0CgojIEJyb3dzZXIgY29tcGF0aWJpbGl0eSBhcHByb2FjaCBpbnNwaXJlZCBieSBodHRwczovL2dpdGh1Yi5jb20vamxhbmR1cmUvYWxwaW5lLWNocm9tZQojIFVzZXMgc3lzdGVtLWluc3RhbGxlZCBicm93c2VycyB3aXRoIFBsYXl3cmlnaHQgaW5zdGVhZCBvZiBkb3dubG9hZGluZyBpbmNvbXBhdGlibGUgYmluYXJpZXMKCiMgSW5zdGFsbCBicm93c2VyIGRlcGVuZGVuY2llcyBmb3IgUGxheXdyaWdodCB3aXRoIEFscGluZSBjb21wYXRpYmlsaXR5ClVTRVIgcm9vdAoKIyBJbnN0YWxsIENocm9taXVtIHdpdGggU3dpZnRTaGFkZXIgZm9yIGdyYXBoaWNzIGNvbXBhdGliaWxpdHkKIyBhbmQgRmlyZWZveCB3aXRoIGFsbCBuZWNlc3NhcnkgZGVwZW5kZW5jaWVzClJVTiBhcGsgYWRkIC0tbm8tY2FjaGUgXAogICAgY2hyb21pdW0gXAogICAgY2hyb21pdW0tc3dpZnRzaGFkZXIgXAogICAgZmlyZWZveCBcCiAgICBmaXJlZm94LWVzciBcCiAgICBuc3MgXAogICAgZnJlZXR5cGUgXAogICAgZnJlZXR5cGUtZGV2IFwKICAgIGhhcmZidXp6IFwKICAgIGNhLWNlcnRpZmljYXRlcyBcCiAgICB0dGYtZnJlZWZvbnQgXAogICAgZm9udC1ub3RvLWVtb2ppIFwKICAgIGZvbnQtbGliZXJhdGlvbiBcCiAgICB0dGYtZGVqYXZ1IFwKICAgICMgQWRkaXRpb25hbCBkZXBlbmRlbmNpZXMgZm9yIGJyb3dzZXIgYXV0b21hdGlvbgogICAgb3B1cyBcCiAgICBsaWJ3ZWJwIFwKICAgIGVuY2hhbnQyIFwKICAgIGV1ZGV2LWxpYnMgXAogICAgbGlic2VjcmV0IFwKICAgIGh5cGhlbiBcCiAgICBnZGstcGl4YnVmIFwKICAgIG1lc2EtZWdsIFwKICAgIGxpYm5vdGlmeSBcCiAgICBsaWJ4c2x0IFwKICAgIGxpYmV2ZW50IFwKICAgIG1lc2EtZ2xlcyBcCiAgICBsaWJ2cHggXAogICAgbGlieGNvbXBvc2l0ZSBcCiAgICBhdC1zcGkyLWNvcmUgXAogICAgY2Fpcm8gXAogICAgbGliZXBveHkgXAogICAgZm9udGNvbmZpZyBcCiAgICBtZXNhLWdibSBcCiAgICBnbGliIFwKICAgIGljdS1saWJzIFwKICAgIGxpYmpwZWctdHVyYm8gXAogICAgcGFuZ28gXAogICAgcGl4bWFuIFwKICAgIGxpYnBuZyBcCiAgICB3YXlsYW5kLWxpYnMtY2xpZW50IFwKICAgIHdheWxhbmQtbGlicy1lZ2wgXAogICAgd2F5bGFuZC1saWJzLXNlcnZlciBcCiAgICBsaWJ4MTEgXAogICAgZGJ1cy1nbGliIFwKICAgIGxpYnh0IFwKICAgIGxpYnhjYiBcCiAgICBsaWJ4ZXh0IFwKICAgIGxpYnhmaXhlcyBcCiAgICBwY2l1dGlscy1saWJzIFwKICAgIGFsc2EtbGliIFwKICAgIGxpYnhpIFwKICAgIGxpYnhrYmNvbW1vbiBcCiAgICBsaWJ4cmFuZHIgXAogICAgbGlieHJlbmRlciBcCiAgICBsaWJ4c2htZmVuY2UgXAogICAgZ3RrKzMuMCBcCiAgICB4dmZiIFwKICAgIGRidXMgXAogICAgdWRldiBcCiAgICAjIFByb2Nlc3MgbWFuYWdlbWVudAogICAgdGluaQoKIyAtLS0tIFByZS1pbnN0YWxsIG44bi1ub2Rlcy1wbGF5d3JpZ2h0ICsgY29uZmlndXJlIGJyb3dzZXJzIGF0IEJVSUxEIHRpbWUgLS0tLQojIEluc3RhbGxpbmcgdmlhIG5wbSBkaXJlY3RseSBpbnRvIGFuIGltYWdlLWJha2VkIHBhdGggKG5vdCBuOG4ncyBvd24gY29tbXVuaXR5LQojIG5vZGUgYXV0by1pbnN0YWxsZXIsIHdoaWNoIHdyaXRlcyBpbnRvIHRoZSBwZXJzaXN0ZW50IC9ob21lL25vZGUvLm44biB2b2x1bWUKIyBhbmQgcmUtcnVucyB0aGUgcGFja2FnZSdzIHBvc3RpbnN0YWxsIG9uIGV2ZXJ5IGJvb3QpIG1lYW5zOgojICAgLSB0aGUgfjMwMC00MDBNQiBQbGF5d3JpZ2h0IGJyb3dzZXIgZG93bmxvYWQgKGlmIGl0IGhhcHBlbnMgYXQgYWxsIC0gdGhlCiMgICAgIHBhY2thZ2UncyBvd24gcG9zdGluc3RhbGwgc2NyaXB0IGlzIHNraXBwZWQgZW50aXJlbHkgYmVsb3cgdmlhCiMgICAgIC0taWdub3JlLXNjcmlwdHMpIGhhcHBlbnMgb25jZSwgYXQgYGRvY2tlciBidWlsZGAsIG5vdCBvbiBldmVyeSBjb250YWluZXIKIyAgICAgYm9vdC9yZWNyZWF0ZQojICAgLSB3ZSBkZXRlcm1pbmlzdGljYWxseSByZXBsYWNlIHdoYXRldmVyIGJyb3dzZXIgZGlyZWN0b3J5IHN0cnVjdHVyZSB0aGUKIyAgICAgcGFja2FnZSBzaGlwcyB3aXRoIGEgc3ltbGluayB0byBBbHBpbmUncyBvd24gc3lzdGVtIENocm9taXVtL0ZpcmVmb3gsIGluCiMgICAgIHRoZSBTQU1FIGltbXV0YWJsZSBpbWFnZSBsYXllciAtLSBubyBydW50aW1lIHByb2Nlc3MgY2FuIGV2ZXIgd3JpdGUgYQojICAgICBjb21wZXRpbmcgYnJvd3NlciBkaXJlY3RvcnkgYWxvbmdzaWRlIGl0LCBzbyB0aGVyZSdzIG5vIHJhY2UKIyAgIC0gbjhuIGxvYWRzIGl0IHZpYSBOOE5fQ1VTVE9NX0VYVEVOU0lPTlMgaW5zdGVhZCBvZiB0aGUgY29tbXVuaXR5LW5vZGUKIyAgICAgbWVjaGFuaXNtLCBzbyBpdCBuZXZlciByZS1pbnN0YWxscy9yZS1kb3dubG9hZHMgYXQgYm9vdAojCiMgLS1pZ25vcmUtc2NyaXB0cyBza2lwcyBCT1RIIHRoZSBwYWNrYWdlJ3MgYHByZWluc3RhbGxgIChgbnB4IG9ubHktYWxsb3cKIyBwbnBtYCwgd2hpY2ggd291bGQgb3RoZXJ3aXNlIGFib3J0IGEgcGxhaW4gYG5wbSBpbnN0YWxsYCkgYW5kIGl0cyBgcG9zdGluc3RhbGxgCiMgKGBzZXR1cC1icm93c2Vycy5qc2AsIHdoaWNoIGlzIHdoYXQgYWN0dWFsbHkgdHJpZ2dlcnMgdGhlIGJyb3dzZXIgZG93bmxvYWQKIyBvbiBldmVyeSBwbGFpbiBgbnBtIGluc3RhbGxgKSAtIHdlIGRvbid0IG5lZWQgZWl0aGVyIHNpbmNlIHRoZSBwdWJsaXNoZWQKIyBucG0gdGFyYmFsbCBhbHJlYWR5IHNoaXBzIHByZWJ1aWx0IGBkaXN0YCBmaWxlcy4KIwojIFBpbm5lZCB0byAwLjIuMTYgdG8gbWF0Y2ggd2hhdCB3YXMgYWxyZWFkeSBkZXBsb3llZCB3aGVuIHRoaXMgZml4IHdhcyBtYWRlIC0KIyBidW1wIGRlbGliZXJhdGVseSwgbm90IGFzIGEgc2lkZSBlZmZlY3Qgb2YgcmVidWlsZGluZyB0aGlzIGltYWdlLgojCiMgVGhlIHN5bWxpbmsgZGlyZWN0b3J5IG5hbWVzIChgY2hyb21pdW0tYWxwaW5lLXN5c3RlbWAsIGBmaXJlZm94LWFscGluZS0KIyBzeXN0ZW1gKSBkb24ndCBuZWVkIHRvIG1hdGNoIGFueSBzcGVjaWZpYyBQbGF5d3JpZ2h0IHJldmlzaW9uIG51bWJlciAtCiMgbjhuLW5vZGVzLXBsYXl3cmlnaHQncyBvd24gZ2V0QnJvd3NlckV4ZWN1dGFibGVQYXRoKCkganVzdCBzY2FucyBpdHMgYnJvd3NlcnMKIyBkaXJlY3RvcnkgZm9yIGFueSBlbnRyeSBzdGFydGluZyB3aXRoICJjaHJvbWl1bSIvImZpcmVmb3giIChzZWUKIyBub2Rlcy9wbGF5d3JpZ2h0L3V0aWxzLmpzKSAtIGJ1dCB0aGV5IG11c3QgYmUgdGhlIE9OTFkgZW50cmllcyBwcmVzZW50LCB3aGljaAojIHRoaXMgYnVpbGQtdGltZSBhcHByb2FjaCBndWFyYW50ZWVzIGJ5IGNvbnN0cnVjdGlvbi4KUlVOIG1rZGlyIC1wIC9vcHQvbjhuLWN1c3RvbS1ub2RlcyAmJiBcCiAgICBjZCAvb3B0L244bi1jdXN0b20tbm9kZXMgJiYgXAogICAgbnBtIGluaXQgLXkgPi9kZXYvbnVsbCAyPiYxICYmIFwKICAgIG5wbSBpbnN0YWxsIC0taWdub3JlLXNjcmlwdHMgLS1vbWl0PWRldiBuOG4tbm9kZXMtcGxheXdyaWdodEAwLjIuMTYgJiYgXAogICAgQlJPV1NFUlNfRElSPS9vcHQvbjhuLWN1c3RvbS1ub2Rlcy9ub2RlX21vZHVsZXMvbjhuLW5vZGVzLXBsYXl3cmlnaHQvZGlzdC9ub2Rlcy9icm93c2VycyAmJiBcCiAgICBybSAtcmYgIiRCUk9XU0VSU19ESVIiL2Nocm9taXVtLSogIiRCUk9XU0VSU19ESVIiL2Nocm9taXVtX2hlYWRsZXNzX3NoZWxsLSogIiRCUk9XU0VSU19ESVIiL2ZpcmVmb3gtKiAiJEJST1dTRVJTX0RJUiIvd2Via2l0LSogMj4vZGV2L251bGwgfHwgdHJ1ZSAmJiBcCiAgICBta2RpciAtcCAiJEJST1dTRVJTX0RJUi9jaHJvbWl1bS1hbHBpbmUtc3lzdGVtL2Nocm9tZS1saW51eCIgJiYgXAogICAgbG4gLXMgL3Vzci9iaW4vY2hyb21pdW0tYnJvd3NlciAiJEJST1dTRVJTX0RJUi9jaHJvbWl1bS1hbHBpbmUtc3lzdGVtL2Nocm9tZS1saW51eC9jaHJvbWUiICYmIFwKICAgIG1rZGlyIC1wICIkQlJPV1NFUlNfRElSL2ZpcmVmb3gtYWxwaW5lLXN5c3RlbS9maXJlZm94IiAmJiBcCiAgICBsbiAtcyAvdXNyL2Jpbi9maXJlZm94ICIkQlJPV1NFUlNfRElSL2ZpcmVmb3gtYWxwaW5lLXN5c3RlbS9maXJlZm94L2ZpcmVmb3giICYmIFwKICAgIGNob3duIC1SIG5vZGU6bm9kZSAvb3B0L244bi1jdXN0b20tbm9kZXMKCiMgU3dpdGNoIGJhY2sgdG8gbm9kZSB1c2VyClVTRVIgbm9kZQoKIyBTZXQgd29ya2luZyBkaXJlY3RvcnkKV09SS0RJUiAvaG9tZS9ub2RlLy5uOG4KCiMgQ3JlYXRlIGEgdm9sdW1lIGZvciBwZXJzaXN0ZW50IGRhdGEKVk9MVU1FIC9ob21lL25vZGUvLm44bgoKIyBFeHBvc2UgcG9ydCA1Njc4CkVYUE9TRSA1Njc4CgojIFNldCBlbnZpcm9ubWVudCB2YXJpYWJsZXMKRU5WIE5PREVfRU5WPXByb2R1Y3Rpb24KRU5WIE44Tl9DVVNUT01fRVhURU5TSU9OUz0vb3B0L244bi1jdXN0b20tbm9kZXMKCiMgVmVzdGlnaWFsIC0gbjhuLW5vZGVzLXBsYXl3cmlnaHQncyBvd24gY29kZSBkb2Vzbid0IGFjdHVhbGx5IHJlYWQgdGhlc2UgKGl0CiMgcmVzb2x2ZXMgYnJvd3NlcnMgcmVsYXRpdmUgdG8gaXRzIG93biBwYWNrYWdlIGRpciwgbm90IHZpYSBlbnYgdmFycykgYnV0CiMgaGFybWxlc3MgdG8gbGVhdmUgc2V0IGZvciBhbnkgb3RoZXIgdG9vbGluZyB0aGF0IG1pZ2h0IGxvb2sgZm9yIHRoZW0uCkVOViBQTEFZV1JJR0hUX1NLSVBfQlJPV1NFUl9ET1dOTE9BRD0xCkVOViBQTEFZV1JJR0hUX0NIUk9NSVVNX0VYRUNVVEFCTEVfUEFUSD0vdXNyL2Jpbi9jaHJvbWl1bS1icm93c2VyCkVOViBQTEFZV1JJR0hUX0ZJUkVGT1hfRVhFQ1VUQUJMRV9QQVRIPS91c3IvYmluL2ZpcmVmb3gKCiMgQ2hyb21lL0Nocm9taXVtIGZsYWdzIGZvciBiZXR0ZXIgaGVhZGxlc3MgcGVyZm9ybWFuY2UKRU5WIENIUk9NSVVNX0ZMQUdTPSItLWRpc2FibGUtc29mdHdhcmUtcmFzdGVyaXplciAtLWRpc2FibGUtZGV2LXNobS11c2FnZSAtLWRpc2FibGUtZ3B1IC0tbm8tc2FuZGJveCIKCiMgRml4OiBVc2UganVzdCAic3RhcnQiIGluc3RlYWQgb2YgIm44biBzdGFydCIgdG8gcHJldmVudCBjb21tYW5kIGR1cGxpY2F0aW9uCkNNRCBbInN0YXJ0Il0K
+# Use the official n8n image as base
+FROM docker.n8n.io/n8nio/n8n:latest
+
+# Browser compatibility approach inspired by https://github.com/jlandure/alpine-chrome
+# Uses system-installed browsers with Playwright instead of downloading incompatible binaries
+
+# Install browser dependencies for Playwright with Alpine compatibility
+USER root
+
+# Install Chromium with SwiftShader for graphics compatibility
+# and Firefox with all necessary dependencies
+RUN apk add --no-cache \
+    chromium \
+    chromium-swiftshader \
+    firefox \
+    firefox-esr \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    font-noto-emoji \
+    font-liberation \
+    ttf-dejavu \
+    # Additional dependencies for browser automation
+    opus \
+    libwebp \
+    enchant2 \
+    eudev-libs \
+    libsecret \
+    hyphen \
+    gdk-pixbuf \
+    mesa-egl \
+    libnotify \
+    libxslt \
+    libevent \
+    mesa-gles \
+    libvpx \
+    libxcomposite \
+    at-spi2-core \
+    cairo \
+    libepoxy \
+    fontconfig \
+    mesa-gbm \
+    glib \
+    icu-libs \
+    libjpeg-turbo \
+    pango \
+    pixman \
+    libpng \
+    wayland-libs-client \
+    wayland-libs-egl \
+    wayland-libs-server \
+    libx11 \
+    dbus-glib \
+    libxt \
+    libxcb \
+    libxext \
+    libxfixes \
+    pciutils-libs \
+    alsa-lib \
+    libxi \
+    libxkbcommon \
+    libxrandr \
+    libxrender \
+    libxshmfence \
+    gtk+3.0 \
+    xvfb \
+    dbus \
+    udev \
+    # Process management
+    tini
+
+# ---- Pre-install n8n-nodes-playwright + configure browsers at BUILD time ----
+# Installing via npm directly into an image-baked path (not n8n's own community-
+# node auto-installer, which writes into the persistent /home/node/.n8n volume
+# and re-runs the package's postinstall on every boot) means:
+#   - the ~300-400MB Playwright browser download (if it happens at all - the
+#     package's own postinstall script is skipped entirely below via
+#     --ignore-scripts) happens once, at `docker build`, not on every container
+#     boot/recreate
+#   - we deterministically replace whatever browser directory structure the
+#     package ships with a symlink to Alpine's own system Chromium/Firefox, in
+#     the SAME immutable image layer -- no runtime process can ever write a
+#     competing browser directory alongside it, so there's no race
+#   - n8n loads it via N8N_CUSTOM_EXTENSIONS instead of the community-node
+#     mechanism, so it never re-installs/re-downloads at boot
+#
+# --ignore-scripts skips BOTH the package's `preinstall` (`npx only-allow
+# pnpm`, which would otherwise abort a plain `npm install`) and its `postinstall`
+# (`setup-browsers.js`, which is what actually triggers the browser download
+# on every plain `npm install`) - we don't need either since the published
+# npm tarball already ships prebuilt `dist` files.
+#
+# Pinned to 0.2.16 to match what was already deployed when this fix was made -
+# bump deliberately, not as a side effect of rebuilding this image.
+#
+# The symlink directory names (`chromium-alpine-system`, `firefox-alpine-
+# system`) don't need to match any specific Playwright revision number -
+# n8n-nodes-playwright's own getBrowserExecutablePath() just scans its browsers
+# directory for any entry starting with "chromium"/"firefox" (see
+# nodes/playwright/utils.js) - but they must be the ONLY entries present, which
+# this build-time approach guarantees by construction.
+RUN mkdir -p /opt/n8n-custom-nodes && \
+    cd /opt/n8n-custom-nodes && \
+    npm init -y >/dev/null 2>&1 && \
+    npm install --ignore-scripts --omit=dev n8n-nodes-playwright@0.2.16 && \
+    BROWSERS_DIR=/opt/n8n-custom-nodes/node_modules/n8n-nodes-playwright/dist/nodes/browsers && \
+    rm -rf "$BROWSERS_DIR"/chromium-* "$BROWSERS_DIR"/chromium_headless_shell-* "$BROWSERS_DIR"/firefox-* "$BROWSERS_DIR"/webkit-* 2>/dev/null || true && \
+    mkdir -p "$BROWSERS_DIR/chromium-alpine-system/chrome-linux" && \
+    ln -s /usr/bin/chromium-browser "$BROWSERS_DIR/chromium-alpine-system/chrome-linux/chrome" && \
+    mkdir -p "$BROWSERS_DIR/firefox-alpine-system/firefox" && \
+    ln -s /usr/bin/firefox "$BROWSERS_DIR/firefox-alpine-system/firefox/firefox" && \
+    chown -R node:node /opt/n8n-custom-nodes
+
+# Switch back to node user
+USER node
+
+# Set working directory
+WORKDIR /home/node/.n8n
+
+# Create a volume for persistent data
+VOLUME /home/node/.n8n
+
+# Expose port 5678
+EXPOSE 5678
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV N8N_CUSTOM_EXTENSIONS=/opt/n8n-custom-nodes
+
+# Vestigial - n8n-nodes-playwright's own code doesn't actually read these (it
+# resolves browsers relative to its own package dir, not via env vars) but
+# harmless to leave set for any other tooling that might look for them.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PLAYWRIGHT_FIREFOX_EXECUTABLE_PATH=/usr/bin/firefox
+
+# Chrome/Chromium flags for better headless performance
+ENV CHROMIUM_FLAGS="--disable-software-rasterizer --disable-dev-shm-usage --disable-gpu --no-sandbox"
+
+# Fix: Use just "start" instead of "n8n start" to prevent command duplication
+CMD ["start"]
