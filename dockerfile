@@ -1,3 +1,31 @@
+# N8N_VERSION / BASE_IMAGE must be declared here, before the FIRST FROM, to be
+# global -- an ARG declared between FROM instructions is scoped to the
+# preceding stage only and goes out of scope at the next FROM (Docker clears
+# ARG scope at each stage boundary). Declaring them here, unused by the first
+# stage, is fine; what matters is they're visible to the SECOND FROM below.
+#
+# Matches n8n's own official guidance (github.com/n8n-io/n8n-hosting README:
+# "Pin a specific image tag for production rather than relying on
+# `stable`/`latest`"). This also happens to be what caused this whole file's
+# other fixes to be needed in the first place: an unpinned `:latest` silently
+# bumped n8n's version, which re-triggered n8n-nodes-playwright's
+# install/download path at boot. Pinning means that only happens when WE
+# deliberately bump this ARG (Dependabot's docker ecosystem update will open a
+# PR when a new release is out, giving a chance to test before merging,
+# instead of it happening silently on every container recreate).
+#
+# 2.0.3 matches what was actually running when this pin was introduced -- bump
+# deliberately.
+#
+# Uses Docker Hub (docker.io) rather than n8n's own docker.n8n.io -- confirmed
+# identical digest for this pinned tag on both registries (they're mirrors of
+# the same image), and docker.n8n.io was persistently rate-limiting CI builds
+# (429 Too Many Requests) while Docker Hub wasn't. Docker Hub's `:latest` tag
+# is NOT equivalent (confirmed to be a different, non-Alpine image) -- this
+# only holds for the pinned version tag, which is exactly what we use.
+ARG N8N_VERSION=2.0.3
+ARG BASE_IMAGE=docker.io/n8nio/n8n:${N8N_VERSION}
+
 # ---- Stage: chromium (Alpine base, independent of the n8n image/version) ----
 # Installed into an isolated root (apk --root) rather than this stage's own OS,
 # so it can be copied wholesale into the final stage below with `COPY --from`.
@@ -10,7 +38,7 @@
 # below (see git history for the removed pieces).
 #
 # NOTE: pin this to whatever Alpine minor version the n8n base image
-# (N8N_VERSION below) actually uses -- confirmed 3.22 as of n8n 2.0.3. Musl/
+# (N8N_VERSION above) actually uses -- confirmed 3.22 as of n8n 2.0.3. Musl/
 # shared-library ABI is stable across nearby Alpine minors in practice, but if
 # n8n's own Alpine version drifts noticeably from this pin, re-verify.
 FROM alpine:3.22 AS chromium
@@ -80,28 +108,7 @@ RUN mkdir -p /chromium-root/etc/apk && \
     # apk's own db/cache bookkeeping isn't useful merged into the final image
     rm -rf /chromium-root/etc/apk /chromium-root/lib/apk /chromium-root/var/cache/apk
 
-# ---- Use the official n8n image as base, pinned to a specific release ----
-# Matches n8n's own official guidance (github.com/n8n-io/n8n-hosting README:
-# "Pin a specific image tag for production rather than relying on
-# `stable`/`latest`"). This also happens to be what caused this whole file's
-# other fixes to be needed in the first place: an unpinned `:latest` silently
-# bumped n8n's version, which re-triggered n8n-nodes-playwright's
-# install/download path at boot. Pinning means that only happens when WE
-# deliberately bump this ARG (Dependabot's docker ecosystem update will open a
-# PR when a new release is out, giving a chance to test before merging,
-# instead of it happening silently on every container recreate).
-#
-# 2.0.3 matches what was actually running when this pin was introduced -- bump
-# deliberately.
-#
-# Uses Docker Hub (docker.io) rather than n8n's own docker.n8n.io -- confirmed
-# identical digest for this pinned tag on both registries (they're mirrors of
-# the same image), and docker.n8n.io was persistently rate-limiting CI builds
-# (429 Too Many Requests) while Docker Hub wasn't. Docker Hub's `:latest` tag
-# is NOT equivalent (confirmed to be a different, non-Alpine image) -- this
-# only holds for the pinned version tag, which is exactly what we use.
-ARG N8N_VERSION=2.0.3
-ARG BASE_IMAGE=docker.io/n8nio/n8n:${N8N_VERSION}
+# ---- Use the official n8n image as base ----
 FROM ${BASE_IMAGE}
 
 # Browser compatibility approach inspired by https://github.com/jlandure/alpine-chrome
