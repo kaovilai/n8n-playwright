@@ -14,6 +14,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  BASE_IMAGE: docker.n8n.io/n8nio/n8n:latest
 
 jobs:
   build-and-push:
@@ -42,6 +43,33 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Compute hourly cache key
+        id: hour
+        run: echo "hour=$(date -u +%Y%m%d%H)" >> "$GITHUB_OUTPUT"
+
+      # docker.n8n.io rate-limits the manifest-resolution HEAD request a floating
+      # `:latest` tag needs on every build. Resolving the digest once and caching
+      # it for up to an hour means repeated builds in that window (multiple PR
+      # pushes, re-runs, the weekly schedule + a manual dispatch, etc.) don't hit
+      # the registry at all until the cache key rolls over to the next hour.
+      - name: Cache resolved base image digest (up to 1h)
+        id: cache-digest
+        uses: actions/cache@v4
+        with:
+          path: /tmp/base-image-ref.txt
+          key: n8n-base-image-digest-${{ steps.hour.outputs.hour }}
+
+      - name: Resolve base image digest
+        if: steps.cache-digest.outputs.cache-hit != 'true'
+        run: |
+          digest=$(docker buildx imagetools inspect "${{ env.BASE_IMAGE }}" | awk '/^Digest:/{print $2; exit}')
+          echo "${{ env.BASE_IMAGE }}" | sed -E "s#:[^:@]+\$#@${digest}#" > /tmp/base-image-ref.txt
+          cat /tmp/base-image-ref.txt
+
+      - name: Read resolved base image ref
+        id: base
+        run: echo "image=$(cat /tmp/base-image-ref.txt)" >> "$GITHUB_OUTPUT"
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -65,6 +93,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=${{ steps.base.outputs.image }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
