@@ -14,6 +14,16 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  # Keep in sync with the dockerfile's N8N_VERSION ARG default. Pinned per
+  # n8n's own official guidance (n8n-io/n8n-hosting README: "Pin a specific
+  # image tag for production rather than relying on `stable`/`latest`").
+  #
+  # docker.io (not docker.n8n.io): confirmed identical digest for this pinned
+  # tag on both registries (same image, mirrored) -- docker.n8n.io was
+  # persistently rate-limiting CI builds (429) while Docker Hub wasn't. NOTE:
+  # this equivalence only holds for the pinned version tag -- Docker Hub's
+  # `:latest` is a different, non-Alpine image, confirmed separately.
+  BASE_IMAGE: docker.io/n8nio/n8n:2.0.3
 
 jobs:
   build-and-push:
@@ -42,6 +52,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # BASE_IMAGE is pinned to a specific release, not `:latest` -- its digest
+      # never changes until this file's BASE_IMAGE (and the dockerfile's
+      # N8N_VERSION) are deliberately bumped together. So the cache key has no
+      # time component: this resolves once, ever, per pinned version, instead
+      # of re-hitting the registry's manifest endpoint on every build. Bumping
+      # BASE_IMAGE naturally busts it (new key = cache miss).
+      - name: Cache resolved base image digest (for this pinned version)
+        id: cache-digest
+        uses: actions/cache@v4
+        with:
+          path: /tmp/base-image-ref.txt
+          key: n8n-base-image-digest-${{ env.BASE_IMAGE }}
+
+      - name: Resolve base image digest
+        if: steps.cache-digest.outputs.cache-hit != 'true'
+        run: |
+          digest=$(docker buildx imagetools inspect "${{ env.BASE_IMAGE }}" | awk '/^Digest:/{print $2; exit}')
+          echo "${{ env.BASE_IMAGE }}" | sed -E "s#:[^:@]+\$#@${digest}#" > /tmp/base-image-ref.txt
+          cat /tmp/base-image-ref.txt
+
+      - name: Read resolved base image ref
+        id: base
+        run: echo "image=$(cat /tmp/base-image-ref.txt)" >> "$GITHUB_OUTPUT"
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -54,7 +88,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,prefix={{branch}}-,suffix=-{{date 'YYYYMMDDHHmmss'}}
+            type=sha,prefix={{branch}}-,suffix=-{{date 'YYYYMMDDHHmmss'}},enable=${{ github.event_name != 'pull_request' }}
             type=schedule,pattern=weekly-{{date 'YYYYMMDD'}}
 
       - name: Build and push Docker image
@@ -65,6 +99,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=${{ steps.base.outputs.image }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

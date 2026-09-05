@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # npm dependencies (playwright, n8n-workflow, eslint, etc.)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # Dockerfile base image (docker.n8n.io/n8nio/n8n)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # actions used in .github/workflows/*.yml
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

@@ -19,8 +19,20 @@ n8n-nodes-playwright downloads browsers compiled with glibc which are incompatib
 
 **Solution:**
 - Install system browsers (chromium, firefox) from Alpine packages
-- Use a background script to replace downloaded browsers with symlinks to system browsers
-- Custom entrypoint script that runs browser configuration in background after container starts
+- Install `n8n-nodes-playwright` at **build time** (`--ignore-scripts`, into
+  `/opt/n8n-custom-nodes`) instead of letting n8n's own community-node
+  auto-installer pull it into the persistent `/home/node/.n8n` volume at
+  container boot, and load it via `N8N_CUSTOM_EXTENSIONS` instead
+- Replace the downloaded browser directory with a symlink to Alpine's system
+  Chromium/Firefox in that same build-time image layer
+
+This used to be done with a runtime entrypoint script (`configure-browsers.sh`)
+that raced n8n's own boot sequence to overwrite whatever Playwright had just
+downloaded with a symlink to the system browser -- whichever one a directory
+listing happened to return first would win, non-deterministically. Baking
+everything in at build time removes the race (and the download) entirely. See
+the `dockerfile`'s own comments for the full explanation, and the
+`n8n-nodes-playwright` version this is pinned to.
 
 ### Memory Requirements
 - **Development**: 600-800MB recommended
@@ -30,15 +42,12 @@ n8n-nodes-playwright downloads browsers compiled with glibc which are incompatib
 The container includes Chromium, Firefox, and WebKit browsers which increase memory usage compared to standard n8n.
 
 ### First Startup Behavior
-On first startup, the container will:
-1. Download Playwright browsers (~375MB total)
-   - Chromium: ~174MB
-   - Chromium Headless Shell: ~104MB
-   - Firefox: ~97MB
-   - WebKit: Included in image
-2. Cache browsers in `/home/node/.cache/ms-playwright`
-3. This process takes 1-2 minutes on first run
-4. Subsequent startups are much faster
+Browsers and `n8n-nodes-playwright` are baked into the image at build time (see
+the "Browser Compatibility on Alpine Linux" section above) -- there is no
+browser download or community-node install at container startup anymore.
+Startup time is the same as a plain n8n container; the only extra image size
+(compared to stock n8n) is Alpine's Chromium/Firefox packages and the
+pre-installed node, not a browser download.
 
 ### Docker Compose Configuration
 
@@ -79,12 +88,11 @@ image: ghcr.io/kaovilai/n8n-playwright:latest
 - Consider increasing memory limits if running multiple browser instances
 - Monitor with: `docker stats n8n`
 
-#### Service not responding immediately after startup
-- Wait 1-2 minutes for browsers to download on first run
-- Check progress: `docker logs -f n8n`
-
 ### System Requirements
-- **Minimum RAM**: 2GB (system + containers)
+- **Minimum RAM**: 2GB (system + containers) -- this is the container's own
+  documented minimum; it has been observed running (with real, if tight,
+  headroom concerns) on hosts with as little as 1.6GB total RAM shared across
+  other services. Below 2GB, watch for OOM under concurrent browser workflows.
 - **Recommended RAM**: 4GB for comfortable operation
 - **Disk Space**: ~1GB for container + browsers
 
