@@ -14,8 +14,16 @@
 # PR when a new release is out, giving a chance to test before merging,
 # instead of it happening silently on every container recreate).
 #
-# 2.0.3 matches what was actually running when this pin was introduced -- bump
-# deliberately.
+# Bumped 2.0.3 -> 2.37.10 deliberately. Note: n8n's own image internals changed
+# substantially across that range -- their runtime base moved to a Docker
+# Hardened Image (n8nio/base, Node 22->26) and their own build now compiles
+# isolated-vm from source specifically because "DHI Alpine has no
+# /etc/alpine-release file, so node-gyp-build's musl detection fails and falls
+# back to a glibc prebuild that crashes" (their own Dockerfile's comment,
+# docker/images/n8n/Dockerfile at n8n-io/n8n) -- the exact same class of bug
+# this repo hit with isolated-vm under QEMU. Their hardened base's musl/libc
+# still traces to Alpine 3.24 (see the chromium stage note below); if
+# n8n bumps its base again, re-verify this alignment.
 #
 # Uses Docker Hub (docker.io) rather than n8n's own docker.n8n.io -- confirmed
 # identical digest for this pinned tag on both registries (they're mirrors of
@@ -23,7 +31,7 @@
 # (429 Too Many Requests) while Docker Hub wasn't. Docker Hub's `:latest` tag
 # is NOT equivalent (confirmed to be a different, non-Alpine image) -- this
 # only holds for the pinned version tag, which is exactly what we use.
-ARG N8N_VERSION=2.0.3
+ARG N8N_VERSION=2.37.10
 ARG BASE_IMAGE=docker.io/n8nio/n8n:${N8N_VERSION}
 
 # ---- Stage: chromium (Alpine base, independent of the n8n image/version) ----
@@ -38,10 +46,13 @@ ARG BASE_IMAGE=docker.io/n8nio/n8n:${N8N_VERSION}
 # below (see git history for the removed pieces).
 #
 # NOTE: pin this to whatever Alpine minor version the n8n base image
-# (N8N_VERSION above) actually uses -- confirmed 3.22 as of n8n 2.0.3. Musl/
-# shared-library ABI is stable across nearby Alpine minors in practice, but if
-# n8n's own Alpine version drifts noticeably from this pin, re-verify.
-FROM alpine:3.22 AS chromium
+# (N8N_VERSION above) actually uses -- 3.22 as of n8n 2.0.3, bumped to 3.24
+# alongside the 2.37.10 version bump (n8n's runtime base moved to a Docker
+# Hardened Image built on Alpine 3.24, per docker/images/n8n-base/Dockerfile
+# at n8n-io/n8n). Musl/shared-library ABI is stable across nearby Alpine
+# minors in practice, but if n8n's own Alpine version drifts noticeably from
+# this pin, re-verify.
+FROM alpine:3.24 AS chromium
 
 RUN mkdir -p /chromium-root/etc/apk && \
     cp -r /etc/apk/* /chromium-root/etc/apk/ && \
@@ -135,7 +146,7 @@ COPY setup-browsers-noop.js /tmp/setup-browsers-noop.js
 # the published npm tarball already ships prebuilt `dist` files.
 #
 # CRITICAL: --ignore-scripts does NOT stop n8n itself from invoking this
-# package's browser-setup script -- confirmed live: n8n 2.0.3 runs
+# package's browser-setup script -- confirmed live: n8n runs
 # dist/nodes/scripts/setup-browsers.js at EVERY startup regardless of how the
 # package was installed (community-node or N8N_CUSTOM_EXTENSIONS), and that
 # script unconditionally deletes the entire browsers directory and re-runs
