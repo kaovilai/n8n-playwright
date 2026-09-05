@@ -14,7 +14,12 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  BASE_IMAGE: docker.n8n.io/n8nio/n8n:latest
+  # docker.n8n.io has been persistently rate-limiting the manifest-resolution
+  # HEAD request our builds need (429 Too Many Requests, observed across many
+  # retries over 20+ minutes -- likely a shared-IP-pool limit on GitHub-hosted
+  # runners, not something our own retry timing controls). n8n publishes the
+  # same image to Docker Hub too; using that here instead.
+  BASE_IMAGE: docker.io/n8nio/n8n:latest
 
 jobs:
   build-and-push:
@@ -47,17 +52,18 @@ jobs:
         id: hour
         run: echo "hour=$(date -u +%Y%m%d%H)" >> "$GITHUB_OUTPUT"
 
-      # docker.n8n.io rate-limits the manifest-resolution HEAD request a floating
-      # `:latest` tag needs on every build. Resolving the digest once and caching
-      # it for up to an hour means repeated builds in that window (multiple PR
-      # pushes, re-runs, the weekly schedule + a manual dispatch, etc.) don't hit
-      # the registry at all until the cache key rolls over to the next hour.
+      # Resolving the digest once and caching it for up to an hour means repeated
+      # builds in that window (multiple PR pushes, re-runs, the weekly schedule +
+      # a manual dispatch, etc.) don't re-hit the registry's manifest-resolution
+      # endpoint at all until the cache key rolls over to the next hour. The
+      # image name is part of the key so switching BASE_IMAGE (e.g. registries)
+      # busts stale cached digests instead of reusing them.
       - name: Cache resolved base image digest (up to 1h)
         id: cache-digest
         uses: actions/cache@v4
         with:
           path: /tmp/base-image-ref.txt
-          key: n8n-base-image-digest-${{ steps.hour.outputs.hour }}
+          key: n8n-base-image-digest-${{ steps.hour.outputs.hour }}-${{ env.BASE_IMAGE }}
 
       - name: Resolve base image digest
         if: steps.cache-digest.outputs.cache-hit != 'true'
