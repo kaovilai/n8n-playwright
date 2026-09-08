@@ -1,4 +1,4 @@
-import { INodeType, INodeExecutionData, IExecuteFunctions,INodeTypeDescription, NodeConnectionType, INodeInputConfiguration, INodeOutputConfiguration } from 'n8n-workflow';
+import { INodeType, INodeExecutionData, IExecuteFunctions,INodeTypeDescription, NodeConnectionTypes, INodeInputConfiguration, INodeOutputConfiguration } from 'n8n-workflow';
 import { join } from 'path';
 import { platform } from 'os';
 import { getBrowserExecutablePath } from './utils';
@@ -12,7 +12,7 @@ export class Playwright implements INodeType {
     displayName: 'Playwright',
     name: 'playwright',
     icon: 'file:playwright.svg',
-    group: ['automation'],
+    group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["operation"]}}',
     description: 'Automate browser actions using Playwright',
@@ -23,14 +23,14 @@ export class Playwright implements INodeType {
     inputs: [
         {
             displayName: 'Input',
-            type: NodeConnectionType.Main,
+            type: NodeConnectionTypes.Main,
         } as INodeInputConfiguration,
     ],
     // eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
     outputs: [
         {
             displayName: 'Output',
-            type: NodeConnectionType.Main,
+            type: NodeConnectionTypes.Main,
         } as INodeOutputConfiguration,
     ],
 
@@ -213,6 +213,11 @@ export class Playwright implements INodeType {
             const browserType = this.getNodeParameter('browser', i) as BrowserType;
             const browserOptions = this.getNodeParameter('browserOptions', i) as IBrowserOptions;
 
+            // Declared outside the try so the finally block below can always
+            // reach it, even if launch() itself never assigns it (e.g. the
+            // executablePath resolution/install throws first).
+            let browserRef: import('playwright').Browser | undefined;
+
             try {
                 const playwright = require('playwright');
                 const browsersPath = join(__dirname, '..', 'browsers');
@@ -235,16 +240,14 @@ export class Playwright implements INodeType {
                     slowMo: browserOptions.slowMo || 0,
                     executablePath,
                 });
+                browserRef = browser;
 
                 const context = await browser.newContext();
                 const page = await context.newPage();
                 await page.goto(url);
 
-								const result = await handleOperation(operation, page, this, i);
-								// console.log(`Operation result:`, result);
-                await browser.close();
-
-                returnData.push(result );
+                const result = await handleOperation(operation, page, this, i);
+                returnData.push(result);
             } catch (error) {
                 console.error(`Browser launch error:`, error);
                 if (this.continueOnFail()) {
@@ -258,6 +261,18 @@ export class Playwright implements INodeType {
                     continue;
                 }
                 throw error;
+            } finally {
+                // Without this, any error thrown after launch() (a hung/failed
+                // page.goto, a missing selector, etc.) leaked the entire
+                // Chromium process tree forever -- browser.close() previously
+                // only ran on the success path. Swallow close() failures: the
+                // browser may already be dead/unreachable, and a close error
+                // must never mask the real error from the try block above.
+                if (browserRef) {
+                    await browserRef.close().catch((closeError) => {
+                        console.error(`Browser close error:`, closeError);
+                    });
+                }
             }
         }
 
