@@ -41,6 +41,33 @@ the `dockerfile`'s own comments for the full explanation, and the
 
 The container includes Chromium, Firefox, and WebKit browsers which increase memory usage compared to standard n8n.
 
+### Playwright Node Session Reuse
+
+The Playwright node's "Session ID" field lets multiple node instances share one
+real browser/page -- e.g. fill a form, click submit (which navigates), then
+continue filling the next page in a later node -- instead of each node opening
+and closing its own browser. Two env vars tune this for your container's
+actual memory budget:
+
+- `PLAYWRIGHT_SESSION_IDLE_TIMEOUT_MS` (default `600000` / 10 minutes): a
+  session left idle this long is closed automatically, even if the workflow
+  never calls "Close Session". Safety net against the same class of leak that
+  motivated baking Chromium in at build time in the first place -- a session
+  left open forever by a workflow that errors out before cleanup would
+  otherwise pin memory indefinitely.
+- `PLAYWRIGHT_MAX_SESSIONS` (default `3`): caps how many session-mode browsers
+  can be open at once. Creating a NEW session beyond this limit fails fast
+  with a clear error instead of piling on more Chromium processes than the
+  host can hold -- reusing an *existing* session is never blocked by it. Pair
+  this with the node's own "Retry On Fail" + "Wait Between Tries" setting so a
+  workflow that hits the limit retries later, once another session frees up
+  (via "Close Session" or the idle timeout above) -- there's no point retrying
+  immediately in a tight loop, since nothing changes until something else
+  frees a slot.
+  Rule of thumb for sizing this: each Chromium instance costs roughly
+  150-300MB depending on the page; a container capped at 1024M with n8n's own
+  ~300MB baseline has room for maybe 2-3 concurrent sessions, not more.
+
 ### First Startup Behavior
 Browsers and `n8n-nodes-playwright` are baked into the image at build time (see
 the "Browser Compatibility on Alpine Linux" section above) -- there is no
