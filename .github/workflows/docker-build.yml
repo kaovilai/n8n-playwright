@@ -96,7 +96,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build (PR validation only, no push)
-        if: github.event_name == 'pull_request'
+        # Same-repo PRs only -- this step passes GITHUB_TOKEN in as a build
+        # secret (needed for the npm.pkg.github.com install step in the
+        # Dockerfile itself), and a PR from an external fork's own commits
+        # control what the Dockerfile actually does with a mounted secret
+        # during the build. Skipping this entirely for fork PRs means they
+        # just don't get Dockerfile-build validation -- an acceptable
+        # trade-off for not handing a token to untrusted build steps.
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: docker/build-push-action@v5
         with:
           context: .
