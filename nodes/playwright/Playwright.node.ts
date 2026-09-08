@@ -6,7 +6,7 @@ import { handleOperation } from './operations';
 import { IBrowserOptions } from './types';
 import { installBrowser } from '../scripts/setup-browsers';
 import { BrowserType } from './config';
-import { getOrCreateSession, closeSession } from './sessionManager';
+import { runInSession, closeSession } from './sessionManager';
 
 export class Playwright implements INodeType {
     description : INodeTypeDescription = {
@@ -253,7 +253,6 @@ export class Playwright implements INodeType {
             // it must never be assigned here or the finally block would close
             // it out from under the next node reusing the same Session ID.
             let browserRef: import('playwright').Browser | undefined;
-            let isNewSession = true;
 
             try {
                 const playwright = require('playwright');
@@ -282,30 +281,39 @@ export class Playwright implements INodeType {
                     });
                 };
 
-                let page: import('playwright').Page;
+                let result;
 
                 if (usingSession) {
-                    const { session, isNew } = await getOrCreateSession(sessionId, browserType, launch);
-                    page = session.page;
-                    isNewSession = isNew;
+                    // runInSession serializes this against any OTHER node
+                    // execution currently using the same Session ID (parallel
+                    // workflow branches, or two separate executions) -- without
+                    // that lock, two concurrent callers could interleave
+                    // actions on the same page mid-sequence.
+                    result = await runInSession(sessionId, browserType, launch, async (page, isNewSession) => {
+                        // Only navigate when a URL was actually given -- a node
+                        // continuing an existing session usually wants to operate
+                        // on whatever page it's already on (e.g. after a previous
+                        // node's submit click navigated it), not jump back to a
+                        // fixed URL.
+                        if (url) {
+                            await page.goto(url);
+                        } else if (isNewSession) {
+                            throw new NodeOperationError(this.getNode(), 'URL is required unless continuing an existing Session ID.', { itemIndex: i });
+                        }
+                        return handleOperation(operation, page, this, i);
+                    });
                 } else {
                     const browser = await launch();
                     browserRef = browser;
                     const context = await browser.newContext();
-                    page = await context.newPage();
-                }
-
-                // Only navigate when a URL was actually given -- a node
-                // continuing an existing session usually wants to operate on
-                // whatever page it's already on (e.g. after a previous node's
-                // submit click navigated it), not jump back to a fixed URL.
-                if (url) {
+                    const page = await context.newPage();
+                    if (!url) {
+                        throw new NodeOperationError(this.getNode(), 'URL is required.', { itemIndex: i });
+                    }
                     await page.goto(url);
-                } else if (!usingSession || isNewSession) {
-                    throw new NodeOperationError(this.getNode(), 'URL is required unless continuing an existing Session ID.', { itemIndex: i });
+                    result = await handleOperation(operation, page, this, i);
                 }
 
-                const result = await handleOperation(operation, page, this, i);
                 returnData.push(result);
             } catch (error) {
                 console.error(`Browser launch error:`, error);

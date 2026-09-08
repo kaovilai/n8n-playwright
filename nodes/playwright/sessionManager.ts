@@ -7,6 +7,18 @@ export interface BrowserSession {
     page: Page;
     browserType: BrowserType;
     lastUsedAt: number;
+    // Tail of this session's async lock chain -- always resolves (never
+    // rejects), regardless of whether the operation holding the lock
+    // succeeded or failed. Purely a queue-position marker, kept separate from
+    // each caller's own result/error so one caller's failure never corrupts
+    // the queue for whoever's waiting behind it.
+    lockTail: Promise<void>;
+    // True while some operation is actually running against this session's
+    // page (i.e. holds the lock). The idle reaper skips a busy session
+    // outright rather than racing it on elapsed time -- a single slow
+    // operation that happens to run longer than the idle timeout must never
+    // get its browser yanked out from under it mid-flight.
+    busy: boolean;
 }
 
 // Module-scope: persists across separate Playwright node executions within
@@ -59,6 +71,11 @@ function startReaper(): void {
     const timer = setInterval(() => {
         const now = Date.now();
         for (const [id, session] of sessions) {
+            if (session.busy) {
+                // Actively in use -- never force-close mid-operation, no
+                // matter how long it's been running. Re-checked next sweep.
+                continue;
+            }
             if (now - session.lastUsedAt > IDLE_TIMEOUT_MS) {
                 console.warn(
                     `Playwright session "${id}" idle for over ${IDLE_TIMEOUT_MS}ms -- closing automatically. Use the "Close Session" operation explicitly instead of relying on this safety net.`,
@@ -74,7 +91,35 @@ function startReaper(): void {
     timer.unref?.();
 }
 
-export async function getOrCreateSession(
+// Serializes access to one session's page: waits for whoever currently holds
+// the lock (if anyone) to finish, then runs `fn`, then hands the lock to the
+// next waiter regardless of whether `fn` succeeded or failed. Needed because
+// the module-level `sessions` map is shared process-wide -- two Playwright
+// nodes given the same Session ID can genuinely run concurrently (parallel
+// workflow branches, or two separate executions), and without this they'd
+// both operate on the same page at once, interleaving actions mid-sequence
+// (e.g. one node's "fill" landing between another node's "click" and its
+// resulting navigation settling).
+function withLock<T>(session: BrowserSession, fn: () => Promise<T>): Promise<T> {
+    const acquire = session.lockTail;
+    let release: () => void;
+    session.lockTail = new Promise<void>((resolve) => {
+        release = resolve;
+    });
+    return acquire.then(async () => {
+        session.busy = true;
+        session.lastUsedAt = Date.now();
+        try {
+            return await fn();
+        } finally {
+            session.busy = false;
+            session.lastUsedAt = Date.now();
+            release();
+        }
+    });
+}
+
+async function getOrCreateSession(
     sessionId: string,
     browserType: BrowserType,
     launch: () => Promise<Browser>,
@@ -99,9 +144,31 @@ export async function getOrCreateSession(
     const browser = await launch();
     const context = await browser.newContext();
     const page = await context.newPage();
-    const session: BrowserSession = { browser, context, page, browserType, lastUsedAt: Date.now() };
+    const session: BrowserSession = {
+        browser,
+        context,
+        page,
+        browserType,
+        lastUsedAt: Date.now(),
+        lockTail: Promise.resolve(),
+        busy: false,
+    };
     sessions.set(sessionId, session);
     return { session, isNew: true };
+}
+
+// Gets-or-creates the session, then runs `fn` while holding that session's
+// lock -- the single entry point Playwright.node.ts should use for actually
+// operating on a session's page, so callers never get a raw page reference
+// without the lock protecting it.
+export async function runInSession<T>(
+    sessionId: string,
+    browserType: BrowserType,
+    launch: () => Promise<Browser>,
+    fn: (page: Page, isNew: boolean) => Promise<T>,
+): Promise<T> {
+    const { session, isNew } = await getOrCreateSession(sessionId, browserType, launch);
+    return withLock(session, () => fn(session.page, isNew));
 }
 
 export async function closeSession(sessionId: string): Promise<boolean> {
@@ -109,7 +176,12 @@ export async function closeSession(sessionId: string): Promise<boolean> {
     if (!session) {
         return false;
     }
+    // Remove from the map immediately so no NEW operation can acquire this
+    // session id once close has been requested (a concurrent call session
+    // will simply create a fresh session instead) -- but still wait for any
+    // operation already in flight (holding the lock) to finish before
+    // actually closing the browser out from under it.
     sessions.delete(sessionId);
-    await session.browser.close();
+    await withLock(session, () => session.browser.close());
     return true;
 }
