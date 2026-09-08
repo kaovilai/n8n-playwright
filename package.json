@@ -1,7 +1,7 @@
 {
-  "name": "n8n-nodes-playwright",
-  "version": "0.2.16",
-  "description": "n8n-community-node-package for browser automation using Playwright",
+  "name": "@kaovilai/n8n-nodes-playwright",
+  "version": "0.3.0",
+  "description": "n8n-community-node-package for browser automation using Playwright (kaovilai fork: fixes a browser-close leak on error, adds Session ID reuse across nodes with locking and a memory-safe session cap)",
   "keywords": [
     "n8n-community-node-package"
   ],
@@ -13,7 +13,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/toema/n8n-playwright"
+    "url": "https://github.com/kaovilai/n8n-playwright"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "engines": {
     "node": ">=18.10",
@@ -33,7 +36,7 @@
     "lint": "eslint nodes package.json",
     "lintfix": "eslint nodes package.json --fix",
     "prepublish": "pnpm build && pnpm lint -c .eslintrc.prepublish.js nodes  package.json && npm version patch",
-    "publish": " npm publish --access public"
+    "publish": "npm publish"
   },
   "files": [
     "dist",
