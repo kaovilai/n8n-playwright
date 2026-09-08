@@ -1,0 +1,57 @@
+name: Publish to GitHub Packages
+
+# Publishes @kaovilai/n8n-nodes-playwright to npm.pkg.github.com on every push
+# to main that changes the package itself -- this is what lets the Dockerfile
+# actually consume our fork's fixes (browser-close leak, session reuse) via a
+# real published package, instead of the previous install step pulling
+# upstream's disconnected `n8n-nodes-playwright@0.2.16` from the public npm
+# registry regardless of what changed in THIS repo's source.
+#
+# GITHUB_TOKEN already has packages:write against this repo's own package --
+# no separate PAT needed. Skips entirely if package.json's version wasn't
+# bumped (npm publish fails on a version that already exists, and we don't
+# want that treated as a workflow failure -- see the continue-on-error below).
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'nodes/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'tsconfig.json'
+      - '.github/workflows/publish-npm.yml'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kaovilai'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Publish (no-op if this version already exists)
+        run: npm publish || echo "Version already published -- bump package.json's version to publish a new one."
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
