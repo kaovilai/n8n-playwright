@@ -1,0 +1,43 @@
+name: Dependabot auto-merge
+
+# Auto-merges Dependabot PRs, but only once required CI checks have passed --
+# `gh pr merge --auto` queues the merge and GitHub itself holds it until the
+# branch's required status checks (see ci.yml / docker-build.yml) succeed, so
+# this workflow doesn't need to poll or wait on CI itself.
+#
+# Patch and minor bumps auto-merge unattended. Major bumps are left for
+# manual review (approved but not auto-merged) since those are the ones most
+# likely to carry real breaking changes worth a human look -- see the
+# n8n-workflow 1.x -> 2.x jump (dragged in a native isolated-vm dependency
+# that doesn't compile everywhere) as a concrete example of why.
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Approve PR
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge (patch/minor only)
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
