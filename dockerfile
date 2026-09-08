@@ -141,6 +141,26 @@ COPY setup-browsers-noop.js /tmp/setup-browsers-noop.js
 #     package ships with a symlink to Alpine's own system Chromium, in the
 #     SAME immutable image layer
 #
+# Installs from GitHub Packages (npm.pkg.github.com) as @kaovilai/n8n-nodes-
+# playwright, NOT the public npm registry's upstream `n8n-nodes-playwright` --
+# that upstream package is a completely different, disconnected artifact from
+# this repo's own TypeScript source (nodes/playwright/*.ts). Before this, a fix
+# made to nodes/playwright/*.ts and merged to main had ZERO effect on the built
+# image: CI's lint/build steps only compiled/typechecked the source, but this
+# RUN step still pulled the unrelated public-npm version regardless -- lint
+# and build passing was never actually validating the shipped artifact.
+# publish-npm.yml publishes this fork's build output to GitHub Packages on
+# every push to main that touches the package, which is what makes bumping
+# the version below (and merging that publish) actually change what THIS
+# image contains.
+#
+# Requires a token with packages:read to install from GitHub Packages even for
+# a public package -- passed as a BuildKit secret (never baked into an image
+# layer) rather than an ARG/ENV, which docker history could otherwise expose.
+# docker-build.yml passes GITHUB_TOKEN this way; a local `docker build` needs
+# `--secret id=npm_token,env=NPM_TOKEN` with a personal access token that has
+# packages:read (e.g. `export NPM_TOKEN=$(gh auth token)`).
+#
 # --ignore-scripts skips the package's `preinstall` (`npx only-allow pnpm`,
 # which would otherwise abort a plain `npm install`) - we don't need it since
 # the published npm tarball already ships prebuilt `dist` files.
@@ -162,8 +182,9 @@ COPY setup-browsers-noop.js /tmp/setup-browsers-noop.js
 # depth, in case whatever invokes this reads that field directly rather than
 # executing the file by path.
 #
-# Pinned to 0.2.16 to match what was already deployed when this fix was made -
-# bump deliberately, not as a side effect of rebuilding this image.
+# Pinned to 0.3.0 (this fork's version, published to GitHub Packages) -- bump
+# deliberately when publish-npm.yml has actually published a newer version,
+# not as a side effect of rebuilding this image.
 #
 # The symlink directory name (`chromium-alpine-system`) doesn't need to match
 # any specific Playwright revision number - n8n-nodes-playwright's own
@@ -171,11 +192,17 @@ COPY setup-browsers-noop.js /tmp/setup-browsers-noop.js
 # starting with "chromium" (see nodes/playwright/utils.js) - but it must be
 # the ONLY entry present, which this build-time approach guarantees by
 # construction.
-RUN mkdir -p /opt/n8n-custom-nodes && \
+RUN --mount=type=secret,id=npm_token \
+    mkdir -p /opt/n8n-custom-nodes && \
     cd /opt/n8n-custom-nodes && \
     npm init -y >/dev/null 2>&1 && \
-    npm install --ignore-scripts --omit=dev n8n-nodes-playwright@0.2.16 && \
-    PKG_DIR=/opt/n8n-custom-nodes/node_modules/n8n-nodes-playwright && \
+    echo "@kaovilai:registry=https://npm.pkg.github.com" > .npmrc && \
+    echo "//npm.pkg.github.com/:_authToken=$(cat /run/secrets/npm_token)" >> .npmrc && \
+    npm install --ignore-scripts --omit=dev @kaovilai/n8n-nodes-playwright@0.3.0 ; \
+    install_status=$? ; \
+    rm -f .npmrc ; \
+    if [ "$install_status" -ne 0 ]; then exit "$install_status"; fi && \
+    PKG_DIR=/opt/n8n-custom-nodes/node_modules/@kaovilai/n8n-nodes-playwright && \
     BROWSERS_DIR="$PKG_DIR/dist/nodes/browsers" && \
     rm -rf "$BROWSERS_DIR"/chromium-* "$BROWSERS_DIR"/chromium_headless_shell-* "$BROWSERS_DIR"/firefox-* "$BROWSERS_DIR"/webkit-* 2>/dev/null || true && \
     mkdir -p "$BROWSERS_DIR/chromium-alpine-system/chrome-linux" && \
