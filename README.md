@@ -40,7 +40,7 @@ even to install a public package, so configure a scope mapping + token first:
 
 ```bash
 echo "@kaovilai:registry=https://npm.pkg.github.com" >> ~/.npmrc
-echo "//npm.pkg.github.com/:_authToken=<a token with read:packages>" >> ~/.npmrc
+echo "//npm.pkg.github.com/:_authToken=<a GitHub classic personal access token with the read:packages scope>" >> ~/.npmrc
 
 pnpm install @kaovilai/n8n-nodes-playwright
 ```
