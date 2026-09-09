@@ -157,7 +157,7 @@ rm -rf ~/.cache/ms-playwright
 rmdir /s /q %USERPROFILE%\AppData\Local\ms-playwright
 ```
 
-1.  Rebuild the package:
+2.  Rebuild the package:
 
 ```bash
 pnpm rebuild @kaovilai/n8n-nodes-playwright
